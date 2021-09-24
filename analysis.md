@@ -1,14 +1,13 @@
 ---
 title: "Supplemental Material"
-date: "9/24/2021"
+date: "9/13/2021"
 output: 
   html_document:
-    theme: united
-    highlight: tango
     toc: TRUE
     toc_float: TRUE
     code_folding: hide
     toc_depth: 4
+    keep_md: true
 params:
   runBootstrap: FALSE
   workDir: "C:/Users/martin.liermann/Documents/GitHub/HistoricalOPsteelhead"
@@ -24,7 +23,8 @@ There may some small discrepancies between this document and the manuscript due 
 
 # Run timing
 
-```{r load libraries, source functions and read data, warning=FALSE, message=FALSE}
+
+```r
 # set the random number generator seed
 set.seed(123)
 
@@ -65,18 +65,31 @@ funcList <- c("bootBetaTS.R","fitBeta.R","fitBetas.R","IQD.R","pj.R","qJ.R")
 for(fn in funcList) source(paste(workDir,"R",fn,sep="/"))
 ```
 
-We fit the beta density function to CPUE data to estimate run timing for the current and historical periods. For the current period we estimated run timing for the hatchery and wild origin fish. We assume that fish can begin arriving on `r format(startStopDates,"%B %e")[1]` and the run has ended on `r format(startStopDates,"%B %e")[2]`.
+We fit the beta density function to CPUE data to estimate run timing for the current and historical periods. For the current period we estimated run timing for the hatchery and wild origin fish. We assume that fish can begin arriving on October 15 and the run has ended on June  1.
 
 We have historical CPUE estimates by week for all four populations. The CPUE data is available as an average across several years between 1956 and 1963. The specific years vary by population (Table S1).
 
-```{r create year table, warning=FALSE, message=FALSE}
+
+```r
 cpueYrTab <- data.frame(Population=c("Quillayute","Hoh","Queets","Quinalt"), Years=c("1958-1963","1956-1959; 1961-1963","1957-1963","1956-1959; 1961-1963"))
 knitr::kable(cpueYrTab, caption="Table S1. The years used in calculating average historical CPUE estimates.")
 ```
+
+
+
+Table: Table S1. The years used in calculating average historical CPUE estimates.
+
+|Population |Years                |
+|:----------|:--------------------|
+|Quillayute |1958-1963            |
+|Hoh        |1956-1959; 1961-1963 |
+|Queets     |1957-1963            |
+|Quinalt    |1956-1959; 1961-1963 |
  
 We have current CPUE data for the Quillayute, Hoh and Queets rivers. We restricted our analysis to 1997-2010, a period when data was available for all populations and during which effort appeared to be relatively consistent. Because some weeks were only fished in a subset of these years, we used a 2 way ANOVA on the log scale (main effects for week and year) to calculate an average year of weekly values comparable to what is available for the historical data.
 
-```{r fit run timing distributions to CPUE data, warning=FALSE}
+
+```r
 # load all of the the CPUE data (historical and current)
 CPUEdat <- read.csv(file=paste(workDir,"data/cpueDatAvg.csv",sep="/"))
 
@@ -120,8 +133,8 @@ predVals <- rbind(predValsB,predValsBC)
 
 ## Run timing plots
 
-```{r fig.width=7, fig.height=8,fig.cap="Figure S1. All of the CPUE data for the historical and current periods with fitted beta distributions. For the current period there is separate CPUE data for hatchery and wild fish. Quinalt data from the current period was not available.", warning=FALSE}
 
+```r
 CPUEdat$category <- paste(CPUEdat$period,CPUEdat$HW,sep="-")
 predVals$category <- paste(predVals$period,predVals$HW,sep="-")
 ggplot(CPUEdat,aes(x=julian,y=CPUE, color=category)) +
@@ -130,8 +143,9 @@ ggplot(CPUEdat,aes(x=julian,y=CPUE, color=category)) +
   scale_x_continuous(limits=dd,breaks=monthPos, labels=monthNam) +
   facet_grid(population~.,scales="free_y") +
   theme_bw()
-
 ```
+
+![Figure S1. All of the CPUE data for the historical and current periods with fitted beta distributions. For the current period there is separate CPUE data for hatchery and wild fish. Quinalt data from the current period was not available.](analysis_files/figure-html/unnamed-chunk-1-1.png)
 
 ## Run timing comparisons
 
@@ -141,7 +155,8 @@ The estimates of the difference are uncertain due to a number of factors. These 
 
 Here we account for uncertainty introduced through fitting the beta distribution to the CPUE data by constructing 95% bootstrap confidence intervals. We calculate the residuals for the relationship and then use the bootstrap procedure to construct a bootstrap distribution for the parameters of interest through repeated fitting to simulated data. To account for auto-correlation in the residuals, we used a parametric bootstrap where residuals were drawn from an auto-regressive time series model fit to the observed residuals. Bootstrap confidence intervals should be viewed as approximate because sample sizes are relatively small, capture efficiency may change during the fishing season, and start and stop dates for Steelhead migration were presumed. Because the bootstrap involves random draws from a distribution, there may be slight differences in the confidence bounds each time the procedure is repeated. The bootstrap is time consuming. Therefore, we store the results and only repeat the analysis when the `runBootstrap` parameter is `TRUE` in the header of the Rmd file used to generate this document.
 
-```{r warning=FALSE, message=FALSE, eval=params$runBootstrap}
+
+```r
 # only run if params$runBoostrap = TRUE
 # bootstrap CIs for difference in quantities.
 # first calculate a matrix of estimators for all populations and periods of interest.
@@ -313,13 +328,15 @@ write.csv(allTabCurrHist,file=paste(workDir,"tables/BSresultsCurrHist.csv",sep="
 write.csv(allTabHatWild,file=paste(workDir,"tables/BSresultsHatWild.csv",sep="/"),row.names=FALSE)
 ```
 
-```{r eval=!params$runBootstrap}
+
+```r
 # if the bootstrap simulations are not run, read saved results
 allTabCurrHist <- read.csv(file=paste(workDir,"tables/BSresultsCurrHist.csv",sep="/"), stringsAsFactors=FALSE)
 allTabHatWild <- read.csv(file=paste(workDir,"tables/BSresultsHatWild.csv",sep="/"), stringsAsFactors=FALSE)
 ```
 
-```{r print table with current vs historical bootstrap results}
+
+```r
 # create a pretty table
 timingCurrHist <- allTabCurrHist %>% 
   mutate(q25 = paste(round(q25)," (",round(q25.lci),",",round(q25.uci),")",sep=""),
@@ -330,7 +347,24 @@ timingCurrHist <- allTabCurrHist %>%
 knitr::kable(timingCurrHist,caption="Table S2. Metrics describing run timing. Values for the current period, historical period and the difference between the current and historical periods. The upper and lower limits for 95% confidence intervals are included in parentheses.")
 ```
 
-```{r print table with current wild vs hatchery bootstrap results}
+
+
+Table: Table S2. Metrics describing run timing. Values for the current period, historical period and the difference between the current and historical periods. The upper and lower limits for 95% confidence intervals are included in parentheses.
+
+|Period     |Population |q25           |q50         |pJan1         |IQR           |
+|:----------|:----------|:-------------|:-----------|:-------------|:-------------|
+|Difference |Quillayute |33 (24,40)    |25 (17,33)  |-18 (-23,-14) |-16 (-29,-6)  |
+|Difference |Hoh        |71 (62,82)    |61 (47,71)  |-43 (-51,-35) |-26 (-52,-11) |
+|Difference |Queets     |63 (24,86)    |54 (-46,70) |-31 (-42,-16) |-22 (-82,4)   |
+|Historic   |Quillayute |1 (-5,7)      |35 (29,43)  |25 (21,29)    |69 (60,80)    |
+|Historic   |Hoh        |-25 (-36,-16) |7 (-2,21)   |45 (37,53)    |69 (54,95)    |
+|Historic   |Queets     |-10 (-33,28)  |24 (10,124) |33 (18,44)    |70 (46,130)   |
+|Current    |Quillayute |33 (28,39)    |61 (56,65)  |7 (4,9)       |52 (47,58)    |
+|Current    |Hoh        |46 (44,48)    |68 (67,70)  |2 (2,3)       |43 (41,45)    |
+|Current    |Queets     |53 (46,60)    |79 (74,84)  |2 (1,4)       |48 (42,56)    |
+
+
+```r
 # create a pretty table
 timingHatWild <- allTabHatWild %>% 
   mutate(q25 = paste(round(q25)," (",round(q25.lci),",",round(q25.uci),")",sep=""),
@@ -340,6 +374,22 @@ timingHatWild <- allTabHatWild %>%
   select(Origin,Population,q25,q50,pJan1,IQR)
 knitr::kable(timingHatWild,caption="Table S3. Metrics describing run timing. Values for the natural and hatchery origin run timing, and the difference between the natural and hatchery origin run timing metrics. The upper and lower limits for 95% confidence intervals are included in parentheses.")
 ```
+
+
+
+Table: Table S3. Metrics describing run timing. Values for the natural and hatchery origin run timing, and the difference between the natural and hatchery origin run timing metrics. The upper and lower limits for 95% confidence intervals are included in parentheses.
+
+|Origin     |Population |q25           |q50           |pJan1      |IQR           |
+|:----------|:----------|:-------------|:-------------|:----------|:-------------|
+|Difference |Quillayute |-67 (-74,-60) |-79 (-84,-74) |71 (66,76) |-21 (-28,-14) |
+|Difference |Hoh        |-72 (-74,-69) |-77 (-79,-76) |62 (61,64) |-8 (-10,-6)   |
+|Difference |Queets     |-71 (-79,-63) |-86 (-92,-80) |68 (59,77) |-27 (-36,-18) |
+|Natural    |Quillayute |33 (28,39)    |61 (56,65)    |7 (4,9)    |52 (47,58)    |
+|Natural    |Hoh        |46 (44,48)    |68 (67,70)    |2 (2,3)    |43 (41,45)    |
+|Natural    |Queets     |53 (46,59)    |79 (74,84)    |2 (1,4)    |48 (42,56)    |
+|Hatchery   |Quillayute |-33 (-38,-30) |-18 (-22,-15) |78 (74,82) |32 (27,37)    |
+|Hatchery   |Hoh        |-25 (-27,-24) |-9 (-10,-8)   |64 (63,66) |35 (34,37)    |
+|Hatchery   |Queets     |-18 (-22,-14) |-7 (-11,-4)   |70 (62,79) |21 (17,27)    |
 
 # Historical runsize estimates
 
@@ -355,12 +405,23 @@ where, $Cwt$ represents the total weight of fish in all the cases combined, $Wa$
 
 Each case contained 48 cans at 1 lb (~0.45 kg) per can. Canned fish weight is a fraction of the total fish weight at capture because non-essential fish parts (e.g., head, tail, and internal organs) were removed prior to canning. To account for this loss, we used a wastage rate ($Wa$) of 0.40.  The average historical weight of Queets Winter Steelhead, $STw$, was (9.8 lbs or ~4.4 kg; WDFW 1934). We used contemporary wild Winter Steelhead harvest rates to estimate the fraction of the total run harvested by the cannery ($R$). Because catch expansion estimates are sensitive to assumed harvest rates, we used a range of plausible values for R (0.28, 0.38, and 0.44) corresponding to the 25%, 50% (median), and 75% quantiles of contemporary annual harvest rates for Queets River wild Winter Steelhead.
 
-```{r create table for Queets cannery expansion estimate}
+
+```r
 canTab <- data.frame(cases=rep(1500,3),Wst=rep(0.4,3), STw=rep(9.8,3),R=c(0.28,0.38, 0.44)) %>%
   mutate(Cwt=cases*48,N=Cwt/((1-Wst)*STw*R))
 
 knitr::kable(canTab[,c("Cwt","Wst","STw","R","N")],digits=c(0,2,1,2,0), caption="Table S4. The values used to calculate the population size in the Queets River in 1923. Cwt is the total weight of canned fish, Wst is the wastage. STw is the average weight of a fish and R is the harvest rate. N is the estimated number of fish based on the different harvest rates.")
 ```
+
+
+
+Table: Table S4. The values used to calculate the population size in the Queets River in 1923. Cwt is the total weight of canned fish, Wst is the wastage. STw is the average weight of a fish and R is the harvest rate. N is the estimated number of fish based on the different harvest rates.
+
+|   Cwt| Wst| STw|    R|     N|
+|-----:|---:|---:|----:|-----:|
+| 72000| 0.4| 9.8| 0.28| 43732|
+| 72000| 0.4| 9.8| 0.38| 32223|
+| 72000| 0.4| 9.8| 0.44| 27829|
 
 
 ## 1948-1960 catch expansion
@@ -378,7 +439,8 @@ Where R is the assumed historical harvest rate (for tribal and sport fisheries c
 The current harvest rate used for expanding the catch is based on contemporary catch and run size data. Because, the contemporary harvest is inconsistent later in the season we truncated catch to months where fishing was consistent. This is accounted for in the **P**  parameter described below. Catch is the sum of commercial and sport catch. 
 
 
-```{r calculate truncated catches, message=FALSE, warning=FALSE}
+
+```r
 # Define the julian date ranges with consistent effort for the current and historical periods
 # Current Period
 rngDatCur <- data.frame(
@@ -479,15 +541,28 @@ Rsum <- data.frame(Population=RRsum$population,Parameter=rep("R",4),
                    Estimate=RRsum$q50,LowerValue=RRsum$q25,UpperValue=RRsum$q75)
 ```
 
-The median (q50) harvest rates for the current period range from about `r round(min(Rsum$Estimate),2)` to `r round(max(Rsum$Estimate),2)`. The 25% and 75% quantiles range from `r round(min(Rsum$LowerValue),2)` to `r round(max(Rsum$LowerValue),2)` and `r round(min(Rsum$UpperValue),2)` to `r round(max(Rsum$UpperValue),2)`, respectively.
+The median (q50) harvest rates for the current period range from about 0.23 to 0.39. The 25% and 75% quantiles range from 0.19 to 0.33 and 0.26 to 0.47, respectively.
 
-```{r warning=FALSE, message=FALSE}
+
+```r
 # Display the results with a table
 knitr::kable(RRsum,digits=2,caption="Table S5. Summary of truncated harvest rates for the current period. q25,q50 and q75 represent the quartiles and median of the rates for the years 1996-2015.")  
 ```
 
 
-```{r warning=FALSE, message=FALSE}
+
+Table: Table S5. Summary of truncated harvest rates for the current period. q25,q50 and q75 represent the quartiles and median of the rates for the years 1996-2015.
+
+|population |  q25|  q50|  q75| mean|   sd|
+|:----------|----:|----:|----:|----:|----:|
+|Hoh        | 0.19| 0.24| 0.35| 0.26| 0.11|
+|Queets     | 0.23| 0.31| 0.39| 0.31| 0.12|
+|Quillayute | 0.20| 0.23| 0.26| 0.24| 0.06|
+|Quinalt    | 0.33| 0.39| 0.47| 0.39| 0.10|
+
+
+
+```r
 ### Combining historical sport and tribal catch and creating catches limited to Dec-Feb
 
 # read the early tribal catch data by month and winter/summer
@@ -527,7 +602,8 @@ catchDatW <- sacDat %>%
 
 #### **P**: Proportion of potential catch
 
-```{r}
+
+```r
 # calculate the estimated percentage of the run in each month 
 # use the fitted beta distributions
 # for all four rivers during the historical period
@@ -542,40 +618,11 @@ for(i in 1:length(popNames)){
 pTabHist <- pTab
 ```
 
-```{r run timing in tabular form for all populations, echo=FALSE}
-# calculate the estimated percentage of the run in each month 
-# for the three rivers with current monthly CPUE data
-nPops <- length(currPopNames)
-nn <- length(bMonPos)
-pTabList <- vector(mode = "list", nPops)
-i <- 1
-cpueTotCurr <- numeric(nPops)
-cpueTotHist <- numeric(nPops)
-names(cpueTotCurr) <- currPopNames
-names(cpueTotHist) <- currPopNames
-for(pop in currPopNames){
-  estH <- estListB[[pop]]
-  estC <- estListBC[[pop]]
-  histP <- pbeta(bMonPos,estH[1],estH[2])[-1]-pbeta(bMonPos,estH[1],estH[2])[-nn]
-  currP <- pbeta(bMonPos,estC[1],estC[2])[-1]-pbeta(bMonPos,estC[1],estC[2])[-nn]
-  cpueTotCurr[i] <- estC[3]*(dd[2]-dd[1])
-  cpueTotHist[i] <- estH[3]*(dd[2]-dd[1])
-  pTab <- data.frame(Month=c(bMonNam[-nn],"Dec-Apr/Feb"),
-                     pRunHist=c(histP*100,NA),
-                     pRunCurrent=c(currP*100,NA))
-  pTab$pop <- pop
-  pTab$histCummulative <- cumsum(pTab$pRunHist)
-  pTab$currentCummulative <- cumsum(pTab$pRunCurrent)
-  pTab$histCummulative[nn] <- pTab$histCummulative[pTab$Month=="Feb"]-pTab$histCummulative[pTab$Month=="Nov"]
-  pTab$currentCummulative[nn] <- pTab$currentCummulative[pTab$Month=="Apr"]-pTab$currentCummulative[pTab$Month=="Nov"]
-  pTabList[[i]] <- pTab
-  i <- i+1
-}
-pTabAll <- Reduce(rbind,pTabList)
-```
 
 
-```{r creating the P-values}
+
+
+```r
 # initialize the table
 ppTab <- data.frame(population=popNames,pHist=rep(NA,4),pCurr=rep(NA,4),P=rep(NA,4))
 
@@ -615,21 +662,34 @@ pp <- ppTab$P
 Psum <- data.frame(Population=ppTab$population,Parameter=rep("P",4), Estimate=pp,LowerValue=pp*0.8,UpperValue=pp*1.2)
 ```
 
-When estimating the relative abundance for current and historical time periods using harvest rates, we need to take into account the proportion of the total run timing that was fished in each period, since it appears that during the historical period, a smaller proportion of the total run timing was fished. The approach we take is to truncate the historical and current catches to months during which fishing was relatively consistent and then account for this in the historical catch expansion by using the estimated run time distributions to calculate the proportion of the total run that was fished during these truncated periods. In the historical period, catches in March and April are difficult to interpret due to sporadic effort during these months. Therefore, we truncate the catch series by only including catches from December through February. The proportion of run timing fished therefore only includes those months. Notice that this value,$P_{hist}$, is relatively consistent across populations, averaging `r round(mean(ppTab$pHist))`% (see Table S6). 
+When estimating the relative abundance for current and historical time periods using harvest rates, we need to take into account the proportion of the total run timing that was fished in each period, since it appears that during the historical period, a smaller proportion of the total run timing was fished. The approach we take is to truncate the historical and current catches to months during which fishing was relatively consistent and then account for this in the historical catch expansion by using the estimated run time distributions to calculate the proportion of the total run that was fished during these truncated periods. In the historical period, catches in March and April are difficult to interpret due to sporadic effort during these months. Therefore, we truncate the catch series by only including catches from December through February. The proportion of run timing fished therefore only includes those months. Notice that this value,$P_{hist}$, is relatively consistent across populations, averaging 61% (see Table S6). 
 
 For the current period we have weekly catches for the Quillayute, Hoh and Queets rivers. Fishing is relatively consistent from the beginning of December through the end of March for the Hoh and Quillayute and from the beginning of December though the end of April for the Queets. For the Quinalt river, where no weekly or monthly current CPUE data was available, We used the average value of $P_{curr}$ from Hoh and Quillayute since we also adjusted catch for the Quinalt based on these two rivers.
 
 Dividing $P_{hist}$ by $P_{curr}$ to produce $P$ resulted in values less than less than 1 for all populations (Table S6).
 
-```{r}
+
+```r
 ppTab2 <- ppTab %>% mutate(pHist=pHist/100,pCurr=pCurr/100)
 knitr::kable(ppTab2,digits=c(NA,3,3,3), caption="Table S6. Estimates of the proportion of the run that was fished consistently for the historical (pHist) and current (pCurr) periods. P is the pHist/pCurr.")
 ```
 
+
+
+Table: Table S6. Estimates of the proportion of the run that was fished consistently for the historical (pHist) and current (pCurr) periods. P is the pHist/pCurr.
+
+|population | pHist| pCurr|     P|
+|:----------|-----:|-----:|-----:|
+|Quillayute | 0.597| 0.780| 0.766|
+|Hoh        | 0.625| 0.759| 0.824|
+|Queets     | 0.622| 0.913| 0.681|
+|Quinalt    | 0.578| 0.769| 0.751|
+
 Here are The $R$ and $P$ values used to expand the truncated historical catch. The upper and lower values for $R$ represent the 25% and 75% quantiles and the upper and lower values for P are calculated by multipling the estimate by 0.8 and 1.2. In both cases these bounds represent rough guesses of the range of plausible values. 
 
 
-```{r}
+
+```r
 pC <- c("Population","Parameter","Estimate","LowerValue","UpperValue")
 paramVals <- rbind(Rsum[pC],Psum[pC])
 
@@ -650,7 +710,8 @@ write.csv(totDat,file=paste(workDir,"tables/historicalCatchExpansion.csv",sep="/
 ```
 
 
-```{r}
+
+```r
 # create a "pretty" table of R and P values 
 rv <- 2
 paramTab <- paramVals2 %>% 
@@ -662,7 +723,19 @@ knitr::kable(paramTab[c(3,1,2,4),],caption="Table S7. Values of P and R used to 
 ```
 
 
-```{r warning=FALSE, message=FALSE}
+
+Table: Table S7. Values of P and R used to expand the historical catch. Values in parentheses represent upper and lower bounds.
+
+|Population |R                |P                |
+|:----------|:----------------|:----------------|
+|Quillayute |0.23 (0.2,0.26)  |0.77 (0.61,0.92) |
+|Hoh        |0.24 (0.19,0.35) |0.82 (0.66,0.99) |
+|Queets     |0.31 (0.23,0.39) |0.68 (0.54,0.82) |
+|Quinalt    |0.39 (0.33,0.47) |0.75 (0.6,0.9)   |
+
+
+
+```r
 # Mean and standard deviation of the annual number of wild winter steelhead caught from 1948-1960 in commercial and recreational fisheries in the Quillayute, Hoh, Queets and Quinault rivers and mean annual winter steelhead population size estimated by expanding the catch to account for harvest rates and the proportion of the steelhead run that was fished. Catch numbers include only those fish caught from December 1 - February 28 due to inconsistent fishing effort outside of this period across years. Upper and lower bounds for population size estimates are based on lower and upper bounds for parameters R and P given in Table 3.
 estTab <- totDat %>% filter(year %in% 1948:1960) %>%
   group_by(population) %>%
@@ -678,9 +751,21 @@ knitr::kable(estTab[c(3,1,2,4),],digits=c(NA,0,0,0,0,0,0,0), caption="Table S8. 
   scientific = FALSE))
 ```
 
+
+
+Table: Table S8. Historical run sizes estimates based on the expansion of historical catches. Estimate represent the estimate average across years. EstLower and EstUpper represent the average estimate based on the lower and upper bounds for R and P. The min and max columns represent the smallest and largest estimates across the year range.
+
+|population | CatchLim| CatchLimSD| Estimate| EstLower| EstUpper|   min|    max|
+|:----------|--------:|----------:|--------:|--------:|--------:|-----:|------:|
+|Quillayute |    3,970|      1,337|   22,567|   16,733|   31,591| 6,702| 34,757|
+|Hoh        |    3,138|        885|   15,923|    9,023|   24,901| 7,118| 24,684|
+|Queets     |    4,187|      2,347|   19,875|   13,025|   32,878| 6,191| 52,200|
+|Quinalt    |    3,977|      2,313|   13,743|    9,345|   20,258| 7,475| 30,332|
+
 ## 1955-1963 CPUE-based estimates
 
-```{r calculate the CPUE based historical estimates}
+
+```r
 yrRange <- list(Quillayute=1997:2010, Hoh=1997:2010, Queets=1997:2010, Quinalt=1997:2010)
 qTab <- data.frame(pop=popNames,currentRunSize=rep(NA,4),
                    cpueTotCurr=rep(NA,4),cpueTotHist=rep(NA,4))
@@ -713,13 +798,25 @@ qTab$RSav.2 <- 2*qTab$cpueTotHist/qAvg
 qTab$RSav.3 <- 3*qTab$cpueTotHist/qAvg
 ```
 
-Since catch is equal to efficiency times effort times run size ($C=EqR$), run size is catch per unit effort divided by efficiency ($R=C/(Eq)=CPUE/q$). Since we have catch per unit effort for the historical period, this means that if we can estimate efficiency, we can estimate the historical run size. While historical efficiency data is not available, we can estimate efficiency for the Quillayute, Hoh and Queets in the current period since we have catch, effort and run size data ($q=C/(ER)$). Using average values for the current period (see Table below). We would expect current efficiency to be higher than historical efficiency due to improvements in gear and access. We assume current efficiency is 1, 1.5 and 2 times the historical efficiency. We use the year range `r paste(range(yrRange[[1]]),collapse="-")` for the current period.
+Since catch is equal to efficiency times effort times run size ($C=EqR$), run size is catch per unit effort divided by efficiency ($R=C/(Eq)=CPUE/q$). Since we have catch per unit effort for the historical period, this means that if we can estimate efficiency, we can estimate the historical run size. While historical efficiency data is not available, we can estimate efficiency for the Quillayute, Hoh and Queets in the current period since we have catch, effort and run size data ($q=C/(ER)$). Using average values for the current period (see Table below). We would expect current efficiency to be higher than historical efficiency due to improvements in gear and access. We assume current efficiency is 1, 1.5 and 2 times the historical efficiency. We use the year range 1997-2010 for the current period.
 
 
-```{r}
+
+```r
 knitr::kable(qTab,caption="Table S9. CPUE based estimates of historical run size. RSav.1 is historical runsize assuming efficiencies are the same and RSav.2 and RSav.3 are historical run sizes assuming that efficiency is 2 and 3 times higher in the current period. The current efficiency used for all populations is the average of the Quillayute and Queets efficiencies.", digits=c(NA,0,0,0,3,3,0,0,0),format.args = list(big.mark = ",",
   scientific = FALSE))
 ```
+
+
+
+Table: Table S9. CPUE based estimates of historical run size. RSav.1 is historical runsize assuming efficiencies are the same and RSav.2 and RSav.3 are historical run sizes assuming that efficiency is 2 and 3 times higher in the current period. The current efficiency used for all populations is the average of the Quillayute and Queets efficiencies.
+
+|pop        | currentRunSize| cpueTotCurr| cpueTotHist|     q|  qAvg| RSav.1| RSav.2| RSav.3|
+|:----------|--------------:|-----------:|-----------:|-----:|-----:|------:|------:|------:|
+|Quillayute |         14,635|         754|         834| 0.052| 0.071| 11,695| 23,391| 35,086|
+|Hoh        |          3,925|       1,882|         505| 0.479| 0.071|  7,080| 14,160| 21,240|
+|Queets     |          6,445|         587|         483| 0.091| 0.071|  6,776| 13,553| 20,329|
+|Quinalt    |          5,142|          NA|         793|    NA| 0.071| 11,113| 22,226| 33,339|
 
 ## Watershed size
 
@@ -729,11 +826,13 @@ The historical steelhead estimates for Waddel Creek, SF Eel, Mad River and N. Um
 
 We First plotted the data on the original and log scale to determine what type of functional relationship might be appropriate. It appears that a log-log relationship would be reasonable.
 
-```{r}
+
+```r
 dat <- read.csv(paste(workDir,"data/basinSizeData.csv",sep="/"),stringsAsFactors=FALSE)
 ```
 
-```{r fig.width=8, fig.height=4, fig.cap="Figure S2. Winter Steelhead population size versus accessible kilometers on the original and log10 scales."}
+
+```r
 par(mfrow=c(1,2))
 
 plot(dat$SKMs,dat$meanSteelhead,
@@ -749,7 +848,10 @@ mtext(side=1, text="Accessible River Km", outer=TRUE)
 mtext(side=2, text="Mean historical winter steelhead", outer=TRUE)
 ```
 
-```{r}
+![Figure S2. Winter Steelhead population size versus accessible kilometers on the original and log10 scales.](analysis_files/figure-html/unnamed-chunk-13-1.png)
+
+
+```r
 dat$SKMs[9] <- NA
 dat$meanSteelhead[9] <- NA
 m1 <- lm(log10(meanSteelhead)~log10(SKMs),data=dat[-9,])
@@ -761,21 +863,22 @@ eqText3 <- paste("$$",round(10^coef(m1)[1],2)," \\times \\frac {500^{",round(coe
 
 When we fit the log-log model we get:
 
-`r eqText`
+$$log(Pop) = 1.71 + 0.91log(km)$$
 
 or 
 
-`r eqText2`
+$$Pop = 51.34  km^{0.91}$$
 
-The fit on the log-log scale is convincing, $R^2=$ `r round(summary(m1)$r.squared,2)`, although, without Waddel Creek on the far left, the relationship would be quite a bit less impressive (Figure S3). 
+The fit on the log-log scale is convincing, $R^2=$ 0.96, although, without Waddel Creek on the far left, the relationship would be quite a bit less impressive (Figure S3). 
 
-The largest predicted Steelhead/km values are for small basins. For basins with Kms near 0 we get values of, `r round(10^coef(m1)[1],2)`, while at 500km we would get:
+The largest predicted Steelhead/km values are for small basins. For basins with Kms near 0 we get values of, 51.34, while at 500km we would get:
 
-`r eqText3`
+$$51.34 \times \frac {500^{0.91}} {500} = 29.78$$
 
 The predicted historical steelhead numbers for the OP populations are summarized in Table 2 and Figure 2.
 
-```{r fig.width=6, fig.height=6, fig.cap="Figure S3. Accessible river kilometers plotted against estimated historical population sizes (open circles). The log-log linear fit is overlayed with 95% prediction intervals. The solid points represent predictions for the four Olympic Penninsula populations." }
+
+```r
 logAt <- 10^(1:20)
 tickAt <- c(1:9,(1:9)*10,(1:9)*100,(1:9)*1000,(1:9)*10000,(1:9)*100000)
 plot(dat$SKMs,dat$meanSteelhead,
@@ -800,12 +903,17 @@ rkms2 <- dat$SKMs[10:13]
 p2 <- predict(m1,newdata=data.frame(SKMs=rkms2),interval="prediction")
 segments(x0=rkms2,x1=rkms2,y0=10^p2[,2],y1=10^p2[,3],lwd=2,col="gray")
 points(rkms2,10^p2[,1],pch=16,cex=1.25,col="black")
-dat2 <- data.frame(SKMs=rkms2,est=10^p2[,1],ymin=10^p2[,2],ymax=10^p2[,3])
+```
 
+![Figure S3. Accessible river kilometers plotted against estimated historical population sizes (open circles). The log-log linear fit is overlayed with 95% prediction intervals. The solid points represent predictions for the four Olympic Penninsula populations.](analysis_files/figure-html/unnamed-chunk-15-1.png)
+
+```r
+dat2 <- data.frame(SKMs=rkms2,est=10^p2[,1],ymin=10^p2[,2],ymax=10^p2[,3])
 ```
 
 
-```{r}
+
+```r
 datOP <- dat[10:13,1:2]
 datOP$PreditedSteelhead <- round(10^p2[,1])
 datOP$lowerPI <- round(10^p2[,2])
@@ -815,11 +923,23 @@ knitr::kable(datOP[c(2,4,1,3),],digits=c(NA,0,0,0,0),align=c("l","c","c","c","c"
   scientific = FALSE),row.names=FALSE)
 ```
 
+
+
+Table: Table S10. The predicted historical population size in the four basins along with 95% prediction intervals.
+
+|Location             | SKMs | PreditedSteelhead | lowerPI | upperPI |
+|:--------------------|:----:|:-----------------:|:-------:|:-------:|
+|Quillayute River, WA | 675  |      19,571       |  7,910  | 48,423  |
+|Hoh River, WA        | 338  |      10,431       |  4,247  | 25,615  |
+|Queets River, WA     | 400  |      12,144       |  4,945  | 29,821  |
+|Quinalt River, WA    | 494  |      14,723       |  5,986  | 36,215  |
+
 ## All estimates together
 
 It can be helpful to look at all of the estimates together (Figure S3 and Table S12).
 
-```{r warning=FALSE, message=FALSE, fig.cap="Figure S5. A side by side comparison of the different historical estimates include the Queets cannery data, the catch expansion, the CPUE based method, the river km relationship. The horizontal lines are the averages of the historical estimates for each population." }
+
+```r
 datOP$population <- c("Queets","Quillayute","Quinalt","Hoh")
 qTab$population <- qTab$pop
 
@@ -857,8 +977,9 @@ ggplot(cTab) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90,hjust=1,vjust=0.5)) +
   ylab("Estmated historic run size in 1000's") 
-
 ```
+
+![Figure S3. A side by side comparison of the different historical estimates include the Queets cannery data, the catch expansion, the CPUE based method, the river km relationship. The horizontal lines are the averages of the historical estimates for each population.](analysis_files/figure-html/unnamed-chunk-17-1.png)
 
 
 # Sensitivity to changes in efficiency
@@ -867,7 +988,8 @@ Here we examine the sensitivity of our run timing results to the assumption of c
 
 To test the sensitivity of the results to plausible changes in efficiency during the season, we used discharge data from the Calawah River (a major tributary to the Quillayute River).
 
-```{r fig.cap="Figure S5. Average monthly discharge in the Calawah River from 1989 to 2015."}
+
+```r
 # Average monthly discharge data for the Calawah River from 1989 through 2018
 disDat <- read.csv(paste(workDir,"data/dischargeDat.csv",sep="/"))
 ggplot(disDat,aes(x=month,y=discharge)) + 
@@ -878,11 +1000,14 @@ ggplot(disDat,aes(x=month,y=discharge)) +
   theme_bw()
 ```
 
+![Figure S4. Average monthly discharge in the Calawah River from 1989 to 2015.](analysis_files/figure-html/unnamed-chunk-18-1.png)
+
 Notice that the discharge is around 1,300 for Nov-Jan, around 1,100 for Feb-Mar, about 850 in April and 450 in May.
 
 Here, I'll assume that efficiency is higher at lower flows (during the period when fishing occurred). Again, efficiency is the proportion of the available run captured per unit effort. I'll assume efficiency for Nov-Jan is $q_1$, $1.5q_1$ for Feb-Mar, $1.75q_1$ for April, and $2q_1$ for May. 
 
-```{r adjust CPUE data and refit, warning=FALSE}
+
+```r
 # prepare data (i.e. create data set with CPUE adjusted to account for different q)
 
 currDat <- CPUEdat %>% filter(population=="Quillayute",HW=="Wild",period=="Current")
@@ -929,7 +1054,8 @@ pJan <- list(curr=pJ(fbCurr$est,1,dd),
 
 Here's a plot of the historic(blue) vs current(green) timing without changes to efficiency.
 
-```{r fig.cap="Figure S6. Quillayute historical and current run timing data and estimates. The data is not adjusted."}
+
+```r
 # Comparing current and historic without q adjustment
 ggplot(histDat,aes(x=julian,y=CPUE)) +
   geom_point(col=col1) +
@@ -939,12 +1065,14 @@ ggplot(histDat,aes(x=julian,y=CPUE)) +
   scale_x_continuous(limits=dd,breaks=monthPos, labels=monthNam) +
   labs(title="Comparing current and historic timing without q adjustment") +
   theme_light()
-
 ```
+
+![](analysis_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
 
 Here's a plot of the historic(blue) vs current(green) timing with the assumed changes to efficiency.
 
-```{r fig.cap="Figure S7. Quillayute historical and current run timing data and estimates. CPUE data has been adjusted to reflect within season changes in efficiency due to flow."}
+
+```r
 # Comparing current and historic with q adjustment
 ggplot(histDatQ,aes(x=julian,y=CPUE)) +
   geom_point(col=col1) +
@@ -956,7 +1084,9 @@ ggplot(histDatQ,aes(x=julian,y=CPUE)) +
   theme_light()
 ```
 
-For both the adjusted and unadjusted efficiencies the historic timing is shifted to the left. while there are some differences in the shapes of the curves, the magnitude of the shift is about the same but. For example, the difference in the proportion of the run that had past by January 1st was `r round(pJan$hist-pJan$curr,2)` assuming constant efficiency and `r round(pJan$histQ-pJan$currQ,2)` for the varying efficiency. So, while the timing distributions can be sensitive to the addition of time-varying efficiency, it does not change the qualitative comparison between the two time periods. If the time-varying efficiency is substantially different for the two periods, this could create problems. However, it seems more likely that the historic fisheries were more sensitive to flow (in terms of efficiency). If that were the case, then the difference might be even more pronounced since the historic timing would be shifted to the left more than the current timing.
+![](analysis_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
+
+For both the adjusted and unadjusted efficiencies the historic timing is shifted to the left. while there are some differences in the shapes of the curves, the magnitude of the shift is about the same but. For example, the difference in the proportion of the run that had past by January 1st was 0.18 assuming constant efficiency and 0.21 for the varying efficiency. So, while the timing distributions can be sensitive to the addition of time-varying efficiency, it does not change the qualitative comparison between the two time periods. If the time-varying efficiency is substantially different for the two periods, this could create problems. However, it seems more likely that the historic fisheries were more sensitive to flow (in terms of efficiency). If that were the case, then the difference might be even more pronounced since the historic timing would be shifted to the left more than the current timing.
 
 Fishing towards the end of the season, April on, in the current period is often targeting Chinook salmon. This means that the mesh size may be larger and the efficiency is therefore lower (for catching steelhead). Correcting for this would inflate the CPUE values towards the end of the season which would result in even larger estimated differences in run timing between the current and historic periods and the current wild and hatchery runs. We chose to not make an adjustment since we were not able to get estimates of changes in efficiency and fishing during this period was sporadic.
 
