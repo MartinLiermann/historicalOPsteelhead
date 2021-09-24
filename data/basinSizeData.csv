@@ -1,0 +1,14 @@
+Location,SKMs,meanSteelhead,maxSteelhead,steelhead years,SKM source,steelhead source
+"Waddel Creek, CA",10.3,432,539,1933-41,Shapovalov and Taft 1954,Shapovalov and Taft 1954
+"SF Eel (Benbow Dam), CA",441.1,14990,25032,1938 - 60,CDFW (reference),CDFW (reference)
+"Mad River (Sweasey Dam), CA",136.8,4976,6640,"1941-42, 1946-52",CDFW (reference),Shapovalov and Taft 1954
+"N. Umpqua River (Winchester Dam), OR",450.3,7812,11220,1945-59,ODFW (reference),ODFW (online source)
+"Stilliguamish River, WA",667.5,21358.03416,69200,"1893-95, 1898, 1904, 1909",Gayeski et al. 2011,Gayeksi et al. and historical sources
+"Nooksak River, WA",918,39444.46193,127800,"1893-95, 1898, 1904, 1909",Gayeski et al. 2012,Gayeksi et al. and historical sources
+"Snohomish, WA",1389,47222.24315,153000,"1893-95, 1898, 1904, 1909",Gayeski et al. 2013,Gayeksi et al. and historical sources
+"Skagit River, WA",1473,26759.27112,86700,"1893-95, 1898, 1904, 1909",Gayeski et al. 2014,Gayeksi et al. and historical sources
+"""Rest of Puget Sound"", WA",6021,57098.79074,185000,"1893-95, 1898, 1904, 1909",Gayeski et al. 2015,Gayeksi et al. and historical sources
+"Queets River, WA",399.9,NA,NA,NA,http://www.onrc.washington.edu,NA
+"Quillayute River, WA",674.7,NA,NA,NA,http://www.onrc.washington.edu,NA
+"Quinalt River, WA",493.9,NA,NA,NA,http://www.onrc.washington.edu,NA
+"Hoh River, WA",338.5,NA,NA,NA,http://www.onrc.washington.edu,NA
