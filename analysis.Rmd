@@ -10,7 +10,7 @@ output:
     code_folding: hide
     toc_depth: 4
 params:
-  runBootstrap: FALSE
+  runBootstrap: TRUE
   workDir: "C:/Users/martin.liermann/Documents/GitHub/HistoricalOPsteelhead"
 ---
 
